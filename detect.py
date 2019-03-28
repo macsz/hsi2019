@@ -1,16 +1,15 @@
 import argparse
-import tensorflow as tf
-import imageio
-import numpy as np
 import os
 import sys
+
+import imageio
+import numpy as np
+import tensorflow as tf
 
 sys.path.append("research")
 sys.path.append("research/slim")
 
 from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as vis_util
-
 
 MAX_NUM_CLASSES = 100
 FACE_CLASS_ID = 2
@@ -75,6 +74,7 @@ def extract_face_info(boxes, classes, scores):
 
 if __name__ == '__main__':
     args = parse_args()
+    os.makedirs(args.output, exist_ok=True)
     
     detection_graph = load_graph(args.graph)
     label_map = label_map_util.load_labelmap(args.labels)
@@ -83,7 +83,6 @@ if __name__ == '__main__':
 
     object_scores = {'eye': [], 'nose': [], 'face': []}
     imgs = get_images(args.input_dir)
-    print(imgs)
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
