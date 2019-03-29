@@ -106,47 +106,49 @@ def distance_matrix(nrof_images, emb):
         print('')
 
 
+class Facenet:
+    def load_and_align_data(self, image_paths, image_size):
+        tmp_image_paths = copy.copy(image_paths)
+        img_list = []
+        os.makedirs('tmp', exist_ok=True)
+        for image in tmp_image_paths:
+            img = misc.imread(os.path.expanduser(image), mode='RGB')
+            img = cv2.resize(img, dsize=(image_size, image_size), interpolation=cv2.INTER_CUBIC)
+            img = prewhiten(img)
+            img_list.append(img)
+            misc.imsave('tmp/'+image.split('/')[-1], img)
+        images = np.stack(img_list)
+        return images
+
+    def get_embeddings(self, images, model):
+        with tf.Graph().as_default():
+            with tf.Session() as sess:
+                # Load the model
+                load_model(model)
+
+                # Get input and output tensors
+                images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+                embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+                phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+
+                # Run forward pass to calculate embeddings
+                feed_dict = {images_placeholder: images, phase_train_placeholder: False}
+                emb = sess.run(embeddings, feed_dict=feed_dict)
+                print('Embeddings:', emb.shape)
+                return emb
+
+
 def main(args):
-    images = load_and_align_data(args.image_files, args.image_size)
-    with tf.Graph().as_default():
+    fn = Facenet()
+    images = fn.load_and_align_data(args.image_files, args.image_size)
+    emb = fn.get_embeddings(images, args.model)
 
-        with tf.Session() as sess:
-
-            # Load the model
-            load_model(args.model)
-
-            # Get input and output tensors
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-
-            # Run forward pass to calculate embeddings
-            feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-            emb = sess.run(embeddings, feed_dict=feed_dict)
-            print('Embeddings:', emb.shape)
-
-            nrof_images = len(args.image_files)
-
-            print('Images:')
-            for i in range(nrof_images):
-                print('%1d: %s' % (i, args.image_files[i]))
-            print('')
-
-            distance_matrix(nrof_images, emb)
-
-
-def load_and_align_data(image_paths, image_size):
-    tmp_image_paths = copy.copy(image_paths)
-    img_list = []
-    os.makedirs('tmp', exist_ok=True)
-    for image in tmp_image_paths:
-        img = misc.imread(os.path.expanduser(image), mode='RGB')
-        img = cv2.resize(img, dsize=(image_size, image_size), interpolation=cv2.INTER_CUBIC)
-        img = prewhiten(img)
-        img_list.append(img)
-        misc.imsave('tmp/'+image.split('/')[-1], img)
-    images = np.stack(img_list)
-    return images
+    nrof_images = len(args.image_files)
+    print('Images:')
+    for i in range(nrof_images):
+        print('%1d: %s' % (i, args.image_files[i]))
+    print('')
+    distance_matrix(nrof_images, emb)
 
 
 def parse_arguments(argv):
