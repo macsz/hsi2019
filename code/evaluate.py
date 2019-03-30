@@ -28,19 +28,19 @@ def main(args):
         emb_avg = np.average(emb, axis=0)
         data_avg[category] = emb_avg.tolist()
 
-    with open('data_all.json', 'w') as outfile:
+    with open(args.db+'_data_all.json', 'w') as outfile:
         json.dump(data_all, outfile)
-    with open('data_avg.json', 'w') as outfile:
+    with open(args.db+'_data_avg.json', 'w') as outfile:
         json.dump(data_avg, outfile)
 
     print('Verify')
-    with open('data_all.json', 'r') as outfile:
+    with open(args.db+'_data_all.json', 'r') as outfile:
         data = json.load(outfile)
         print('Keys:', len(data.keys()))
         for key in data.keys():
             print(key, np.array(data[key]).shape)
 
-    with open('data_avg.json', 'r') as outfile:
+    with open(args.db+'_data_avg.json', 'r') as outfile:
         data = json.load(outfile)
         print('Keys:', len(data.keys()))
         for key in data.keys():
@@ -52,6 +52,7 @@ def parse_arguments(argv):
     parser.add_argument('model', type=str,
                         help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file')
     parser.add_argument('cat_dir', type=str)
+    parser.add_argument('--db', type=str, help='Path and db name')
     return parser.parse_args(argv)
 
 
