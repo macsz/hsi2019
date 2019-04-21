@@ -42,6 +42,7 @@ def main(args):
     print('Valid:', valid)
     print('Invalid:', invalid)
     print('All:', all)
+    print('Accuracy:', int((valid / all)*10000)/10000)
 
 
 def parse_arguments(argv):
